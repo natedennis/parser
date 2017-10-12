@@ -43,6 +43,45 @@ public class AccessLogDAO {
         }
     }
 
+	public void bulkPersist(List<AccessLog> accessLogs, int batchSize) {
+        // Create an EntityManager
+        EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
+        EntityTransaction transaction = null;
+
+        try {
+            // Get a transaction
+            transaction = manager.getTransaction();
+            // Begin the transaction
+            transaction.begin();
+            
+            int i = 0;
+            for (AccessLog a : accessLogs) {
+                 if (a != null) {
+
+                     manager.persist(a);
+            	                     
+            	    if (i++ % batchSize == 0) {
+            	    	manager.flush();
+                    }
+                 }
+              }
+            manager.flush();
+
+            // Commit the transaction
+            transaction.commit();
+        } catch (Exception ex) {
+            // If there are any exceptions, roll back the changes
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            // Print the Exception
+            logger.error("accesslog persist error: {}", ex);
+        } finally {
+            // Close the EntityManager
+            manager.close();
+        }
+    }
+	
     /**
      * Read all the AccessLog.
      * 

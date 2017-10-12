@@ -1,3 +1,2 @@
-# parser
-# parser
-# parser
+# mvn clean compile package install
+# java -cp "lib/*:*" com.natedennis.Parser

@@ -89,7 +89,7 @@ public class AccessLog {
 		this.status = status;
 	}
 
-	@Column(name = "request", length = 512)
+	@Column(name = "user_agent", length = 512)
 	public String getUserAgent() {
 		return userAgent;
 	}
