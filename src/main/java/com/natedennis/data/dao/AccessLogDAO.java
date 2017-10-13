@@ -109,7 +109,7 @@ public class AccessLogDAO {
             // Get a List of AccessLog
             StringBuffer q = new StringBuffer("SELECT a.ip FROM AccessLog a ");
             q.append("where a.accessDate >= :startDate and a.accessDate < :endDate ");
-            q.append("GROUP BY a.ip HAVING COUNT(a.id) > :threshold ");
+            q.append("GROUP BY a.ip HAVING COUNT(DISTINCT a.id) > :threshold ");
             ips = manager.createQuery(q.toString(), String.class)
             		.setParameter("startDate", startDate)
             		.setParameter("endDate", endDate)
@@ -192,7 +192,7 @@ public class AccessLogDAO {
             StringBuffer q = new StringBuffer("CREATE TABLE access_log_filtered_copy ");
             q.append("SELECT b.* FROM access_log b inner join access_log a on a.ip=b.ip ");
             q.append("WHERE a.access_date >= :startDate and a.access_date < :endDate ");
-            q.append("GROUP BY a.ip HAVING COUNT(a.id)> :threshold ");
+            q.append("GROUP BY a.ip HAVING COUNT(DISTINCT a.id)> :threshold ");
             manager.createNativeQuery(q.toString())
             		.setParameter("startDate", startDate)
             		.setParameter("endDate", endDate)

@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -19,6 +20,9 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,20 +75,24 @@ public class Parser {
 				}
 
 				// required 2017-01-02.13:00:00
-				startDate = new SimpleDateFormat("yyyy-MM-dd.HH:mm:ss")
-						.parse(((String) cmdLine.getParsedOptionValue("startDate")));
+				  String pattern = "yyyy-MM-dd.HH:mm:ss";
+				  DateTime dateTime  = DateTime.parse((String) cmdLine.getParsedOptionValue("startDate"), 
+				    		 DateTimeFormat.forPattern(pattern)).withZone(DateTimeZone.forID("UTC"));;
+				  startDate = dateTime.toDate();
+//				SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd.HH:mm:ss");
+//				format.setTimeZone(TimeZone.getTimeZone( DateTimeZone.getDefault()));
+//				startDate = format.parse(((String) cmdLine.getParsedOptionValue("startDate")));
 
 				// required
-				duration = Duration.valueOf(((String) cmdLine.getParsedOptionValue("duration")).toUpperCase());
-				Calendar endCal = Calendar.getInstance();
-				endCal.setTime(startDate);
+				duration = Duration.valueOf(((String) cmdLine.getParsedOptionValue("duration")).toUpperCase());        
+				
+				DateTime endCal = new DateTime(startDate);
 
 				if (duration.equals(Duration.HOURLY)) {
-					endCal.add(Calendar.HOUR, 1);
+					endDate=endCal.plusHours(1).toDate();
 				} else {
-					endCal.add(Calendar.DAY_OF_YEAR, 1);
+					endDate=endCal.plusDays(1).toDate();
 				}
-				endDate = endCal.getTime();
 
 				// optional
 				if (cmdLine.hasOption("threshold")) {
@@ -108,7 +116,7 @@ public class Parser {
 
 				List<String> ips = dao.threadHoldQuery(startDate, endDate, threshold);
 				logger.info("******");
-				ips.forEach(ip -> logger.info(ip));
+//				ips.forEach(ip -> logger.info(ip));
 
 				logger.info("copy records matching this criteria to access_log_filtered_copy");
 				dao.copyFilterResults(startDate, endDate, threshold);
