@@ -1,5 +1,7 @@
 package com.natedennis.data.dao;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -87,9 +89,9 @@ public class AccessLogDAO {
      * 
      * @return a List of AccessLog
      */
-    public List<AccessLog> readAll() {
+    public List<String> threadHoldQuery(Date startDate, Date endDate, int threshold) {
 
-        List<AccessLog> students = null;
+        List<String> ips = new ArrayList<>();
 
         // Create an EntityManager
         EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
@@ -101,8 +103,18 @@ public class AccessLogDAO {
             // Begin the transaction
             transaction.begin();
 
+            // select distinct a.ip, count(a.id) from access_log a group by a.ip HAVING COUNT(a.id)>200;
+            // select count(id) from access_log where ip='192.168.89.111';
+
             // Get a List of AccessLog
-            students = manager.createQuery("SELECT a FROM AccessLog a", AccessLog.class).getResultList();
+            StringBuffer q = new StringBuffer("SELECT a.ip FROM AccessLog a ");
+            q.append("where a.accessDate >= :startDate and a.accessDate < :endDate ");
+            q.append("GROUP BY a.ip HAVING COUNT(a.id) > :threshold ");
+            ips = manager.createQuery(q.toString(), String.class)
+            		.setParameter("startDate", startDate)
+            		.setParameter("endDate", endDate)
+            		.setParameter("threshold", Long.valueOf(threshold))
+            		.getResultList();
 
             // Commit the transaction
             transaction.commit();
@@ -117,7 +129,7 @@ public class AccessLogDAO {
             // Close the EntityManager
             manager.close();
         }
-        return students;
+        return ips;
     }
 
     /**
@@ -125,7 +137,7 @@ public class AccessLogDAO {
      * 
      * @param id
      */
-    public void delete(int id) {
+    public void cleanUp() {
         // Create an EntityManager
         EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
         EntityTransaction transaction = null;
@@ -136,12 +148,9 @@ public class AccessLogDAO {
             // Begin the transaction
             transaction.begin();
 
-            // Get the AccessLog object
-            AccessLog stu = manager.find(AccessLog.class, id);
-            
-
-            // Delete the AccessLog
-            manager.remove(stu);
+            // clean up with native queries .. still jpa compliant 
+            manager.createNativeQuery("TRUNCATE access_log").executeUpdate();
+            manager.createNativeQuery("DROP TABLE IF EXISTS access_log_filtered_copy").executeUpdate();
 
             // Commit the transaction
             transaction.commit();
@@ -156,6 +165,54 @@ public class AccessLogDAO {
             // Close the EntityManager
             manager.close();
         }
+    }
+    
+    public List<String> copyFilterResults(Date startDate, Date endDate, int threshold) {
+
+        List<String> ips = new ArrayList<>();
+
+        // Create an EntityManager
+        EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
+        EntityTransaction transaction = null;
+
+        try {
+            // Get a transaction
+            transaction = manager.getTransaction();
+            // Begin the transaction
+            transaction.begin();
+
+            // select distinct a.ip, count(a.id) from access_log a group by a.ip HAVING COUNT(a.id)>200;
+            // select count(id) from access_log where ip='192.168.89.111';
+
+            // Get a List of AccessLog
+            //insert into access_log_filtered_copy select  b.* from access_log b inner join 
+            //access_log a on b.ip=a.ip where a.access_date >= '2017-01-01.13:00' and a.access_date < '2017-01-01.14:00' group by a.ip HAVING COUNT(a.ip)>50;
+
+            
+            StringBuffer q = new StringBuffer("CREATE TABLE access_log_filtered_copy ");
+            q.append("SELECT b.* FROM access_log b inner join access_log a on a.ip=b.ip ");
+            q.append("WHERE a.access_date >= :startDate and a.access_date < :endDate ");
+            q.append("GROUP BY a.ip HAVING COUNT(a.id)> :threshold ");
+            manager.createNativeQuery(q.toString())
+            		.setParameter("startDate", startDate)
+            		.setParameter("endDate", endDate)
+            		.setParameter("threshold", Long.valueOf(threshold))
+            		.executeUpdate();
+
+            // Commit the transaction
+            transaction.commit();
+        } catch (Exception ex) {
+            // If there are any exceptions, roll back the changes
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            // Print the Exception
+            logger.error("accesslog select error: {}", ex);
+        } finally {
+            // Close the EntityManager
+            manager.close();
+        }
+        return ips;
     }
 
     /**
