@@ -66,8 +66,8 @@ public class Parser {
 				logger.debug("threshold : {}", cmdLine.hasOption("threshold")
 						? ((Number) cmdLine.getParsedOptionValue("threshold")) : "threshold not found");
 
-				if (cmdLine.hasOption("file")) {
-					file = ((String) cmdLine.getParsedOptionValue("file"));
+				if (cmdLine.hasOption("accesslog")) {
+					file = ((String) cmdLine.getParsedOptionValue("accesslog"));
 					if (!Files.exists(Paths.get(file))) {
 						throw new IOException("File does not exist");
 					}
@@ -148,7 +148,7 @@ public class Parser {
 		Option helpOption = Option.builder("h").longOpt("help").required(false).desc("shows this message").build();
 
 		// default target/classes/access.log
-		Option fileOption = Option.builder("f").longOpt("file").numberOfArgs(1).required(false).type(String.class)
+		Option fileOption = Option.builder("f").longOpt("accesslog").numberOfArgs(1).required(false).type(String.class)
 				.desc("path to log file. default: target/classes/access.log").build();
 
 		Option startDateOption = Option.builder("sD").longOpt("startDate").numberOfArgs(1).required(true)
