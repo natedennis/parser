@@ -27,9 +27,14 @@ public class EntityManagerProvider {
 		EntityManagerFactory emf = context.get();
 		return emf;
 	}
-	
+
 	public static EntityManager getEM() {
 		return context.get().createEntityManager();
+	}
+
+	public static void destory() {
+		logger.trace("calling clean");
+		context.remove();
 	}
 
 }

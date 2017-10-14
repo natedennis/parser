@@ -26,6 +26,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.natedennis.data.EntityManagerProvider;
 import com.natedennis.data.dao.AccessLogDAO;
 import com.natedennis.data.enumeration.Duration;
 import com.natedennis.util.ParseFileUtil;
@@ -120,6 +121,7 @@ public class Parser {
 				
 				logger.info("******");
 				ips.forEach(ip -> logger.info(ip));
+				logger.info("******");
 
 				logger.info("copy records matching this criteria to access_log_filtered_copy");
 				dao.copyFilterResults(startDate, endDate, threshold);
@@ -130,7 +132,9 @@ public class Parser {
 		} catch (ParseException | java.text.ParseException | IOException pe) {
 			logger.error("exception:", pe);
 		} finally {
-
+			//give this thread will go away in one line
+			//but i think this line is an important statement of understanding :)
+			EntityManagerProvider.destory();
 		}
 		System.exit(0);
 	}
