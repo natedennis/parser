@@ -7,6 +7,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,9 @@ public class AccessLogDAO {
 	public void bulkPersist(List<AccessLog> accessLogs, int batchSize) {
         // Create an EntityManager
         EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
+        		manager.unwrap(Session.class )
+        	    .setJdbcBatchSize( 50 );
+        
         EntityTransaction transaction = null;
 
         try {
@@ -63,12 +67,14 @@ public class AccessLogDAO {
                      manager.persist(a);
             	                     
             	    if (i++ % batchSize == 0) {
+                        manager.clear();
             	    	manager.flush();
                     }
                  }
               }
             manager.flush();
-
+//release memory
+            manager.clear();
             // Commit the transaction
             transaction.commit();
         } catch (Exception ex) {
@@ -185,14 +191,16 @@ public class AccessLogDAO {
             // select count(id) from access_log where ip='192.168.89.111';
 
             // Get a List of AccessLog
-            //insert into access_log_filtered_copy select  b.* from access_log b inner join 
-            //access_log a on b.ip=a.ip where a.access_date >= '2017-01-01.13:00' and a.access_date < '2017-01-01.14:00' group by a.ip HAVING COUNT(a.ip)>50;
+            // CREATE TABLE ab SELECT b.* FROM access_log b inner join 
+            // ( select a.ip from access_log a  WHERE a.access_date >= '2017-01-01 13:00:00.0' 
+            // and a.access_date < '2017-01-01 14:00:00.0' GROUP BY a.ip HAVING COUNT(DISTINCT a.id)> 1) c on b.ip=c.ip;
+
 
             
             StringBuffer q = new StringBuffer("CREATE TABLE access_log_filtered_copy ");
-            q.append("SELECT b.* FROM access_log b inner join access_log a on a.ip=b.ip ");
+            q.append("SELECT b.* FROM access_log b inner join (select a.ip from access_log a ");
             q.append("WHERE a.access_date >= :startDate and a.access_date < :endDate ");
-            q.append("GROUP BY a.ip HAVING COUNT(DISTINCT a.id)> :threshold ");
+            q.append("GROUP BY a.ip HAVING COUNT(DISTINCT a.id)> :threshold ) c on b.ip=c.ip  ");
             manager.createNativeQuery(q.toString())
             		.setParameter("startDate", startDate)
             		.setParameter("endDate", endDate)

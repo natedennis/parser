@@ -116,7 +116,7 @@ public class Parser {
 
 				List<String> ips = dao.threadHoldQuery(startDate, endDate, threshold);
 				logger.info("******");
-//				ips.forEach(ip -> logger.info(ip));
+				ips.forEach(ip -> logger.info(ip));
 
 				logger.info("copy records matching this criteria to access_log_filtered_copy");
 				dao.copyFilterResults(startDate, endDate, threshold);
