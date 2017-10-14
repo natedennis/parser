@@ -12,43 +12,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.natedennis.Parser;
+import com.natedennis.data.EntityManagerProvider;
 import com.natedennis.data.domain.AccessLog;
 
 public class AccessLogDAO {
    
     private final Logger logger = LoggerFactory.getLogger(AccessLogDAO.class);
-	
-	public void persist(AccessLog accessLog) {
-        // Create an EntityManager
-        EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
-        EntityTransaction transaction = null;
-
-        try {
-            // Get a transaction
-            transaction = manager.getTransaction();
-            // Begin the transaction
-            transaction.begin();
-
-            manager.persist(accessLog);
-
-            // Commit the transaction
-            transaction.commit();
-        } catch (Exception ex) {
-            // If there are any exceptions, roll back the changes
-            if (transaction != null) {
-                transaction.rollback();
-            }
-            // Print the Exception
-            logger.error("accesslog persist error: {}", ex);
-        } finally {
-            // Close the EntityManager
-            manager.close();
-        }
-    }
 
 	public void bulkPersist(List<AccessLog> accessLogs, int batchSize) {
         // Create an EntityManager
-        EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
+        EntityManager manager = EntityManagerProvider.getEM();;
         		manager.unwrap(Session.class )
         	    .setJdbcBatchSize( 50 );
         
@@ -100,7 +73,7 @@ public class AccessLogDAO {
         List<String> ips = new ArrayList<>();
 
         // Create an EntityManager
-        EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
+        EntityManager manager = EntityManagerProvider.getEM();;
         EntityTransaction transaction = null;
 
         try {
@@ -145,7 +118,7 @@ public class AccessLogDAO {
      */
     public void cleanUp() {
         // Create an EntityManager
-        EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
+        EntityManager manager = EntityManagerProvider.getEM();;
         EntityTransaction transaction = null;
 
         try {
@@ -173,12 +146,12 @@ public class AccessLogDAO {
         }
     }
     
-    public List<String> copyFilterResults(Date startDate, Date endDate, int threshold) {
+    public void copyFilterResults(Date startDate, Date endDate, int threshold) {
 
         List<String> ips = new ArrayList<>();
 
         // Create an EntityManager
-        EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
+        EntityManager manager = EntityManagerProvider.getEM();;
         EntityTransaction transaction = null;
 
         try {
@@ -200,7 +173,8 @@ public class AccessLogDAO {
             StringBuffer q = new StringBuffer("CREATE TABLE access_log_filtered_copy ");
             q.append("SELECT b.* FROM access_log b inner join (select a.ip from access_log a ");
             q.append("WHERE a.access_date >= :startDate and a.access_date < :endDate ");
-            q.append("GROUP BY a.ip HAVING COUNT(DISTINCT a.id)> :threshold ) c on b.ip=c.ip  ");
+            q.append("GROUP BY a.ip HAVING COUNT(DISTINCT a.id)> :threshold ) c on b.ip=c.ip "
+            		+ "where b.access_date >=:startDate and b.access_date < :endDate ");
             manager.createNativeQuery(q.toString())
             		.setParameter("startDate", startDate)
             		.setParameter("endDate", endDate)
@@ -220,7 +194,6 @@ public class AccessLogDAO {
             // Close the EntityManager
             manager.close();
         }
-        return ips;
     }
 
     /**
@@ -230,7 +203,7 @@ public class AccessLogDAO {
      */
     public void merge(AccessLog accessLog) {
         // Create an EntityManager
-        EntityManager manager = Parser.ENTITY_MANAGER_FACTORY.createEntityManager();
+        EntityManager manager = EntityManagerProvider.getEM();;
         EntityTransaction transaction = null;
 
         try {

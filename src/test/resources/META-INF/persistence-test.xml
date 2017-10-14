@@ -1,0 +1,43 @@
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+	version="2.0">
+	<persistence-unit name="ParserJunit" transaction-type="RESOURCE_LOCAL">
+		<!-- Persistence provider -->
+		<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+		<!-- Entity classes -->
+		<class>com.natedennis.data.domain.AccessLog</class>
+
+		<properties>
+			<!-- The JDBC URL to the database instance -->
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:mysql://localhost:3306/parser_junit?useSSL=false&amp;useJDBCCompliantTimezoneShift=false&amp;useLegacyDatetimeCode=false&amp;serverTimezone=EST" />
+
+			<!-- The database username -->
+			<property name="javax.persistence.jdbc.user" value="root" />
+
+			<!-- The database password -->
+			<property name="javax.persistence.jdbc.password" value="" />
+		</properties>
+	</persistence-unit>
+	
+	<!-- trickery to avoid the default not being there before we overwrite it-->
+	<persistence-unit name="Parser" transaction-type="RESOURCE_LOCAL">
+		<!-- Persistence provider -->
+		<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+		<!-- Entity classes -->
+		<properties>
+			<!-- The JDBC URL to the database instance -->
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:mysql://localhost:3306/parser?useSSL=false&amp;useJDBCCompliantTimezoneShift=false&amp;useLegacyDatetimeCode=false&amp;serverTimezone=EST" />
+
+			<!-- The database username -->
+			<property name="javax.persistence.jdbc.user" value="root" />
+
+			<!-- The database password -->
+			<property name="javax.persistence.jdbc.password" value="" />
+		</properties>
+	</persistence-unit>
+</persistence>

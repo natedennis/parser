@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.natedennis.data.dao.AccessLogDAO;
 import com.natedennis.data.enumeration.Duration;
+import com.natedennis.util.ParseFileUtil;
 
 /**
  * ﻿The goal is to write a parser in Java that parses web server access log
@@ -35,15 +36,12 @@ import com.natedennis.data.enumeration.Duration;
  * certain number of requests for the given duration.
  */
 public class Parser {
-
-	// Create an EntityManagerFactory when you start the application.
-	public static final EntityManagerFactory ENTITY_MANAGER_FACTORY = Persistence.createEntityManagerFactory("Parser");
+	
 
 	private static final Logger logger = LoggerFactory.getLogger(Parser.class);
 
 	public static void main(String[] args) {
 		logger.info("Hello World!");
-
 		try {
 			String file = "target/classes/access.log";
 			Date startDate;
@@ -75,9 +73,10 @@ public class Parser {
 				}
 
 				// required 2017-01-02.13:00:00
+				// format determined by the requirements document
 				  String pattern = "yyyy-MM-dd.HH:mm:ss";
 				  DateTime dateTime  = DateTime.parse((String) cmdLine.getParsedOptionValue("startDate"), 
-				    		 DateTimeFormat.forPattern(pattern)).withZone(DateTimeZone.forID("UTC"));;
+				    		 DateTimeFormat.forPattern(pattern));;
 				  startDate = dateTime.toDate();
 //				SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd.HH:mm:ss");
 //				format.setTimeZone(TimeZone.getTimeZone( DateTimeZone.getDefault()));
@@ -99,22 +98,26 @@ public class Parser {
 					threshold = ((Number) cmdLine.getParsedOptionValue("threshold")).intValue();
 				}
 
-				// TODO should switch this to weld or openbeans
-				// handle the filestatic processing
+				// TODO for larger projects should switch 
+				// this to weld or openbeans and use cdi with apache delta spike
+				// handles the file processing
 				ParseFileUtil pfu = new ParseFileUtil();
-
+				// dao for access log related stuff
 				AccessLogDAO dao = new AccessLogDAO();
 
 				logger.info("cleaning up any old data");
 				dao.cleanUp();
 
 				logger.info("processing access log");
-
 				pfu.processAccessFile(file);
-				logger.info("finding ips occuring more than {}, between the dates {} and {}", threshold, startDate,
+				
+				logger.info("finding ips occuring more than {}, between the dates {} and {}",
+						threshold, 
+						startDate,
 						endDate);
 
 				List<String> ips = dao.threadHoldQuery(startDate, endDate, threshold);
+				
 				logger.info("******");
 				ips.forEach(ip -> logger.info(ip));
 

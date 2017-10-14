@@ -7,7 +7,7 @@
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
         <!-- Entity classes -->
-        <class>com.natedennis.AccessLog</class>
+        <class>com.natedennis.data.domain.AccessLog</class>
 
         <properties>
             <!-- The JDBC URL to the database instance -->
@@ -20,4 +20,5 @@
             <property name="javax.persistence.jdbc.password" value="" />
         </properties>
     </persistence-unit>
+     
 </persistence>
